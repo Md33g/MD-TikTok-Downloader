@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>MD TikTok Downloader</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#000000">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🦁</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
@@ -66,6 +68,18 @@ nav{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + env(sa
 nav button{flex:1;background:none;padding:9px 4px;border-radius:18px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:12px;font-weight:600;color:var(--mute);transition:.2s}
 nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 nav button.on{background:linear-gradient(135deg,var(--gold),var(--ember));color:#fff}
+.sheet{position:fixed;inset:0;background:#000b;z-index:30;display:flex;align-items:flex-end;justify-content:center;animation:fade .2s}
+.sheet[hidden]{display:none}
+@keyframes fade{from{opacity:0}}
+.panel{width:min(520px,100%);background:var(--card);border:1px solid var(--line);border-radius:26px 26px 0 0;padding:20px 18px calc(20px + env(safe-area-inset-bottom));animation:up .3s cubic-bezier(.2,1.1,.4,1)}
+@keyframes up{from{transform:translateY(60px)}}
+.panel h3{font-size:20px;margin:14px 0 12px}
+.mini{display:flex;gap:12px;align-items:center}.mini img{width:48px;height:64px;object-fit:cover;border-radius:10px}
+.mini div{min-width:0}.mini b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mini small{color:var(--mute)}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:10px}.choices .btn{padding:22px 10px;font-size:18px}
+.teal{background:linear-gradient(135deg,var(--teal),#2c9be3);color:#021a2a;box-shadow:0 8px 22px #00e5ff44}
+.opt{display:block;width:100%;text-align:left;background:#ffffff0f;border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin-bottom:8px;font-weight:800;font-size:16px}
+.opt:hover{border-color:var(--gold)}.opt small{display:block;font-weight:400;color:var(--mute);margin-top:2px}.opt[disabled]{opacity:.4}
 .toast{position:fixed;left:50%;top:18px;transform:translate(-50%,-90px);background:var(--card);border:1px solid var(--gold);padding:12px 18px;border-radius:14px;transition:.35s;z-index:20}
 .toast.show{transform:translate(-50%,0)}
 .empty{text-align:center;color:var(--mute);padding:40px 10px}
@@ -76,6 +90,7 @@ nav button.on{background:linear-gradient(135deg,var(--gold),var(--ember));color:
 <body>
 <div class="sky"></div><div class="sun"></div>
 <div class="toast" id="toast" role="status"></div>
+<div class="sheet" id="sheet" hidden><div class="panel" id="shBody" role="dialog" aria-label="Choose download"></div></div>
 <main>
 <header>
   <div class="logo">🦁</div>
@@ -111,6 +126,7 @@ nav button.on{background:linear-gradient(135deg,var(--gold),var(--ember));color:
       <select id="s-q"><option value="hd">HD (best)</option><option value="sd">Standard</option></select></div>
     <div class="set"><div>File name<small>Tokens: {author} {id} {title}</small></div>
       <input type="text" id="s-name" value="{author}_{id}"></div>
+    <div class="set"><div>Ask video or audio<small>When a link is shared to this site</small></div><input type="checkbox" class="sw" id="s-ask"></div>
     <div class="set"><div>Auto-paste on open<small>Reads your clipboard if allowed</small></div><input type="checkbox" class="sw" id="s-paste"></div>
     <div class="set"><div>Auto-fetch after paste<small>Starts as soon as a link is pasted</small></div><input type="checkbox" class="sw" id="s-auto"></div>
     <div class="set"><div>Save history<small>Stored only on this device</small></div><input type="checkbox" class="sw" id="s-hist" checked></div>
@@ -141,7 +157,7 @@ nav button.on{background:linear-gradient(135deg,var(--gold),var(--ember));color:
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const API='https://www.tikwm.com';
 const SKIP=/tiktok\.com\/tiktoklite/i; // links to ignore
-const def={q:'hd',name:'{author}_{id}',paste:false,auto:false,hist:true,light:false,reg:''};
+const def={q:'hd',name:'{author}_{id}',paste:false,auto:false,hist:true,ask:true,light:false,reg:''};
 let cfg=Object.assign({},def),hist=[];
 try{cfg=Object.assign(cfg,JSON.parse(localStorage.getItem('mdtt-cfg')||'{}'));hist=JSON.parse(localStorage.getItem('mdtt-hist')||'[]')}catch(e){}
 const save=()=>{try{localStorage.setItem('mdtt-cfg',JSON.stringify(cfg));localStorage.setItem('mdtt-hist',JSON.stringify(hist))}catch(e){}};
@@ -154,9 +170,9 @@ const fmt=n=>n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?(n/1e3).toFixed(1)+'K':n;
 function applyCfg(){
   document.documentElement.dataset.theme=cfg.light?'blue':'dark';
   $('#s-q').value=cfg.q;$('#s-name').value=cfg.name;$('#s-paste').checked=cfg.paste;$('#s-auto').checked=cfg.auto;
-  $('#s-hist').checked=cfg.hist;$('#s-theme').checked=cfg.light;$('#s-reg').value=cfg.reg;
+  $('#s-hist').checked=cfg.hist;$('#s-ask').checked=cfg.ask;$('#s-theme').checked=cfg.light;$('#s-reg').value=cfg.reg;
 }
-[['s-q','q'],['s-name','name'],['s-paste','paste'],['s-auto','auto'],['s-hist','hist'],['s-theme','light'],['s-reg','reg']].forEach(([id,k])=>{
+[['s-q','q'],['s-name','name'],['s-paste','paste'],['s-auto','auto'],['s-hist','hist'],['s-ask','ask'],['s-theme','light'],['s-reg','reg']].forEach(([id,k])=>{
   $('#'+id).addEventListener('change',e=>{cfg[k]=e.target.type==='checkbox'?e.target.checked:e.target.value;save();applyCfg()});
 });
 
@@ -189,6 +205,23 @@ async function lookup(link){
 const fname=(d,ext)=>(cfg.name||'{author}_{id}').replace('{author}',d.author?.unique_id||'tiktok').replace('{id}',d.id).replace('{title}',(d.title||'').slice(0,40))
   .replace(/[^\w\-. ]+/g,'').trim().replace(/\s+/g,'_')+'.'+ext;
 
+function saveBlob(b,name){const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),5000)}
+async function toWav(url,name,btn){
+  const old=btn?.textContent;if(btn)btn.textContent='Converting…';
+  try{
+    const buf=await (await fetch(url)).arrayBuffer();
+    const ctx=new (window.AudioContext||window.webkitAudioContext)();
+    const a=await ctx.decodeAudioData(buf);ctx.close();
+    const ch=a.numberOfChannels,n=a.length,out=new DataView(new ArrayBuffer(44+n*ch*2));
+    const w=(o,t)=>[...t].forEach((c,i)=>out.setUint8(o+i,c.charCodeAt(0)));
+    w(0,'RIFF');out.setUint32(4,36+n*ch*2,true);w(8,'WAVEfmt ');out.setUint32(16,16,true);out.setUint16(20,1,true);out.setUint16(22,ch,true);
+    out.setUint32(24,a.sampleRate,true);out.setUint32(28,a.sampleRate*ch*2,true);out.setUint16(32,ch*2,true);out.setUint16(34,16,true);w(36,'data');out.setUint32(40,n*ch*2,true);
+    const d=[...Array(ch).keys()].map(i=>a.getChannelData(i));let p=44;
+    for(let i=0;i<n;i++)for(let c=0;c<ch;c++){const v=Math.max(-1,Math.min(1,d[c][i]));out.setInt16(p,v<0?v*32768:v*32767,true);p+=2}
+    saveBlob(new Blob([out],{type:'audio/wav'}),name);toast('Saved '+name);
+  }catch(e){toast('WAV conversion failed. Try MP3 instead.')}
+  if(btn)btn.textContent=old;
+}
 async function download(url,name,btn){
   const old=btn?.textContent;if(btn)btn.textContent='Downloading…';
   try{
@@ -229,7 +262,40 @@ function card(d){
   return el;
 }
 
-async function run(){
+/* format picker (used for shared links) */
+const sheet=$('#sheet'),shBody=$('#shBody');
+sheet.addEventListener('click',e=>{if(e.target===sheet)sheet.hidden=true});
+function openPicker(d){
+  const hd=abs(d.hdplay),sd=abs(d.play),au=abs(d.music);
+  const head=`<div class="mini"><img src="${esc(abs(d.cover))}" alt=""><div><b>${esc(d.title||'Untitled video')}</b><small>@${esc(d.author?.unique_id)}</small></div></div>`;
+  const close=()=>sheet.hidden=true;
+  const step1=()=>{
+    shBody.innerHTML=head+`<h3>What do you want to download?</h3><div class="choices"><button class="btn" data-s="v">🎬 Video</button><button class="btn teal" data-s="a">🎧 Audio</button></div><button class="ghost" data-s="x" style="width:100%;margin-top:10px">Cancel</button>`;
+    shBody.querySelector('[data-s=v]').onclick=()=>step2('Video formats',[
+      ['HD MP4','No watermark, best quality'+(d.hd_size?` · ${(d.hd_size/1048576).toFixed(1)} MB`:''),hd,'mp4'],
+      ['Standard MP4','No watermark, smaller file'+(d.size?` · ${(d.size/1048576).toFixed(1)} MB`:''),sd,'mp4']]);
+    shBody.querySelector('[data-s=a]').onclick=()=>step2('Audio formats',[
+      ['MP3','Original sound, plays everywhere',au,'mp3'],
+      ['WAV','Lossless, converted on your device',au,'wav']]);
+    shBody.querySelector('[data-s=x]').onclick=close;
+  };
+  const step2=(title,opts)=>{
+    shBody.innerHTML=head+`<h3>${title}</h3>`+opts.map((o,i)=>`<button class="opt" data-i="${i}"${o[2]?'':' disabled'}>${o[0]}<small>${o[1]}</small></button>`).join('')+`<button class="ghost" data-s="b" style="width:100%;margin-top:4px">Back</button>`;
+    shBody.querySelectorAll('[data-i]').forEach(b=>b.onclick=()=>{
+      const [,,u,ext]=opts[b.dataset.i];close();
+      ext==='wav'?toWav(u,fname(d,'wav'),null):download(u,fname(d,ext),null);
+    });
+    shBody.querySelector('[data-s=b]').onclick=step1;
+  };
+  step1();sheet.hidden=false;
+}
+function sharedLink(){
+  const p=new URLSearchParams(location.search);
+  const raw=['url','text','title','u'].map(k=>p.get(k)).filter(Boolean).join(' ');
+  return (raw.match(/https?:\/\/[^\s]+/)||[''])[0];
+}
+
+async function run(opts={}){
   const links=[...new Set($('#url').value.split(/\s+/).filter(l=>/tiktok\.com|douyin/i.test(l)&&!SKIP.test(l)))];
   const st=$('#status'),res=$('#results'),go=$('#go');
   st.className='status';
@@ -239,7 +305,7 @@ async function run(){
   for(const [i,l] of links.entries()){
     st.textContent=`Fetching ${i+1} of ${links.length}…`;
     try{
-      const d=await lookup(l);res.appendChild(card(d));ok++;
+      const d=await lookup(l);res.appendChild(card(d));ok++;if(opts.picker&&ok===1&&cfg.ask)openPicker(d);
       if(cfg.hist){hist=hist.filter(h=>h.id!==d.id);hist.unshift({id:d.id,title:d.title,author:d.author?.unique_id,cover:abs(d.cover),url:l,hd:abs(d.hdplay),sd:abs(d.play),au:abs(d.music),t:Date.now()});hist=hist.slice(0,60);save()}
     }catch(e){
       const n=document.createElement('p');n.className='status err';n.textContent=`${l.slice(0,50)}: ${e.message}`;res.appendChild(n);
@@ -276,6 +342,13 @@ function renderHist(){
 $('#clrHist').onclick=()=>{hist=[];save();renderHist();toast('History cleared')};
 
 applyCfg();
+if('serviceWorker' in navigator&&/^https?:/.test(location.protocol))navigator.serviceWorker.register('sw.js').catch(()=>{});
+const shared=sharedLink();
+if(shared&&!SKIP.test(shared)){
+  $('#url').value=shared;
+  try{history.replaceState(null,'',location.pathname)}catch(e){}
+  run({picker:true});
+}
 const h=location.hash.slice(1);if(['hist','set','about'].includes(h))show(h);
 if(cfg.paste)navigator.clipboard?.readText().then(t=>{if(/tiktok\.com/i.test(t)&&!SKIP.test(t)){$('#url').value=t;if(cfg.auto)run()}}).catch(()=>{});
 </script>
