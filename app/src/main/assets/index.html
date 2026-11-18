@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MD TikTok Downloader</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🦁</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#000;--bg2:#030a1c;--card:#070d1c;--ink:#eaf2ff;--mute:#8da2c9;--gold:#2f8bff;--ember:#1f4bff;--teal:#00e5ff;--line:#2f8bff2e;--r:22px}
+:root[data-theme=blue]{--bg:#04112e;--bg2:#08215c;--card:#0b1d4d;--ink:#eaf2ff;--mute:#9db4e6;--line:#5aa2ff3d}
+*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{font-family:'Bricolage Grotesque',system-ui,sans-serif;background:var(--bg);color:var(--ink);overflow-x:hidden;padding-top:env(safe-area-inset-top)}
+.sky{position:fixed;inset:0;z-index:-1;background:radial-gradient(120% 70% at 50% 100%,#1f4bff66 0,#0a1a5a44 28%,var(--bg2) 55%,var(--bg) 80%)}
+:root[data-theme=blue] .sky{background:radial-gradient(120% 70% at 50% 100%,#2f8bff,#0a3aa8 40%,var(--bg) 80%)}
+.sun{position:fixed;left:50%;bottom:-120px;width:420px;height:420px;margin-left:-210px;border-radius:50%;background:radial-gradient(var(--gold),#1f4bff 60%,transparent 70%);filter:blur(2px);opacity:.45;z-index:-1;animation:rise 6s ease-in-out infinite alternate}
+@keyframes rise{to{transform:translateY(-30px) scale(1.06)}}
+main{max-width:760px;margin:0 auto;padding:22px 18px 130px}
+.view{display:none}.view.on{display:block}
+header{text-align:center;padding:10px 0 22px}
+.logo{font-size:64px;line-height:1;filter:drop-shadow(0 8px 24px #2f8bff99);display:inline-block;animation:bob 3s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-8px) rotate(-4deg)}}
+h1{font-weight:800;font-size:clamp(34px,8vw,58px);letter-spacing:-.03em;line-height:1}
+h1 span{background:linear-gradient(90deg,var(--teal),var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{color:var(--mute);margin-top:8px}
+.box{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;box-shadow:0 18px 50px #0004}
+.row{display:flex;gap:10px}
+textarea,input[type=text],select{width:100%;font:inherit;color:var(--ink);background:#00000099;border:1px solid var(--line);border-radius:14px;padding:14px;resize:none;outline:none}
+select option{background:#0b1d4d;color:#eaf2ff}
+textarea:focus,input:focus,select:focus{border-color:var(--gold);box-shadow:0 0 0 3px #2f8bff55}
+button{font:inherit;cursor:pointer;border:0;color:var(--ink)}
+button:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+.btn{background:linear-gradient(135deg,var(--gold),var(--ember));color:#fff;font-weight:800;padding:14px 20px;border-radius:14px;transition:transform .15s,box-shadow .15s;box-shadow:0 8px 22px #1f4bff77;white-space:nowrap}
+.btn:hover{transform:translateY(-2px)}.btn:active{transform:scale(.97)}.btn[disabled]{opacity:.6;cursor:wait}
+.ghost{background:#ffffff14;border:1px solid var(--line);padding:12px 14px;border-radius:14px;font-weight:600}
+.ghost:hover{background:#ffffff24}
+.hint{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.pill{font-size:13px;color:var(--mute);border:1px solid var(--line);border-radius:99px;padding:5px 12px}
+.status{margin:16px 4px;color:var(--mute);min-height:22px;text-align:center}
+.status.err{color:#ff8a7a}
+.bar{height:4px;border-radius:9px;background:#ffffff1a;overflow:hidden;margin-top:10px;display:none}
+.bar i{display:block;height:100%;width:30%;background:linear-gradient(90deg,var(--teal),var(--gold));animation:slide 1s linear infinite}
+@keyframes slide{from{margin-left:-30%}to{margin-left:100%}}
+.res{margin-top:16px;display:grid;grid-template-columns:150px 1fr;gap:16px;animation:pop .35s cubic-bezier(.2,1.4,.4,1)}
+@keyframes pop{from{transform:scale(.94);opacity:0}}
+.res img{width:150px;aspect-ratio:9/14;object-fit:cover;border-radius:16px;background:#0006}
+.res h3{font-size:16px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.by{display:flex;align-items:center;gap:8px;margin:8px 0;color:var(--mute);font-size:14px}
+.by img{width:26px;height:26px;border-radius:50%;aspect-ratio:1}
+.stats{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.dl{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.dl .btn{padding:11px 10px;font-size:14px}.dl .alt{background:#ffffff1a;color:var(--ink);box-shadow:none;border:1px solid var(--line)}
+.dl .teal{background:linear-gradient(135deg,var(--teal),#2c9be3);color:#021a2a;box-shadow:0 8px 22px #2ce3c544}
+.hist{display:flex;gap:12px;align-items:center;padding:10px;margin-bottom:10px}
+.hist img{width:54px;height:72px;object-fit:cover;border-radius:10px}
+.hist div{flex:1;min-width:0}.hist b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hist small{color:var(--mute)}
+.set{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 4px;border-bottom:1px solid var(--line)}
+.set:last-child{border:0}.set small{display:block;color:var(--mute)}.set select,.set input[type=text]{width:170px;padding:9px}
+.sw{appearance:none;-webkit-appearance:none;width:50px;height:28px;border-radius:99px;background:#ffffff2e;position:relative;cursor:pointer;transition:.2s;flex:none}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:.2s}
+.sw:checked{background:var(--teal)}.sw:checked::after{left:25px}
+h2{font-size:26px;margin:6px 0 16px;letter-spacing:-.02em}
+.about{text-align:center;padding:30px 20px}.about .logo{font-size:84px}
+.about p{font-size:20px;margin-top:14px}
+nav{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom));width:min(440px,calc(100% - 24px));display:flex;gap:4px;padding:8px;border-radius:26px;background:#000000e6;backdrop-filter:blur(16px);border:1px solid var(--line);box-shadow:0 14px 40px #0008;z-index:9}
+nav button{flex:1;background:none;padding:9px 4px;border-radius:18px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:12px;font-weight:600;color:var(--mute);transition:.2s}
+nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+nav button.on{background:linear-gradient(135deg,var(--gold),var(--ember));color:#fff}
+.toast{position:fixed;left:50%;top:calc(18px + env(safe-area-inset-top));transform:translate(-50%,-120px);background:var(--card);border:1px solid var(--gold);padding:12px 18px;border-radius:14px;transition:.35s;z-index:60;max-width:90%;text-align:center}
+.toast.show{transform:translate(-50%,0)}
+.empty{text-align:center;color:var(--mute);padding:40px 10px}
+
+/* ===== Lion + ring overlay (share / auto-download) ===== */
+.ov{position:fixed;inset:0;z-index:50;background:#000000db;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:24px;text-align:center}
+.ov.on{display:flex}
+.ov h3{font-size:24px;font-weight:800;margin-top:22px;letter-spacing:-.01em}
+.ov p{color:var(--mute);max-width:320px;min-height:22px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.orb{position:relative;width:170px;height:170px;display:grid;place-items:center;--p:0}
+.orb .glow{position:absolute;inset:-18px;border-radius:50%;background:radial-gradient(#2f8bff66,transparent 65%);animation:pulse 1.8s ease-in-out infinite}
+.orb .lion{font-size:78px;line-height:1;filter:drop-shadow(0 6px 20px #2f8bffaa);animation:pulse 1.8s ease-in-out infinite}
+.orb .ring{position:absolute;inset:0;border-radius:50%;
+  -webkit-mask:radial-gradient(farthest-side,#0000 calc(100% - 10px),#000 calc(100% - 9px));
+  mask:radial-gradient(farthest-side,#0000 calc(100% - 10px),#000 calc(100% - 9px));
+  background:conic-gradient(from 0deg,#0000 0,var(--teal) 70%,var(--gold));
+  animation:spin 1.1s linear infinite}
+.orb.det .ring{animation:none;background:conic-gradient(var(--teal),var(--gold) calc(var(--p)*1%),#ffffff22 0)}
+.orb.ok .ring{animation:none;background:#2ce38a}
+.orb.bad .ring{animation:none;background:#ff6a5a}
+.orb.ok .lion,.orb.bad .lion,.orb.ok .glow,.orb.bad .glow{animation:none}
+.orb .tick{position:absolute;right:2px;bottom:2px;width:46px;height:46px;border-radius:50%;display:none;place-items:center;font-size:24px;font-weight:800;color:#03210f;animation:pop .4s cubic-bezier(.2,1.4,.4,1)}
+.orb.ok .tick{display:grid;background:#2ce38a}.orb.ok .tick::after{content:"✓"}
+.orb.bad .tick{display:grid;background:#ff6a5a;color:#2a0500}.orb.bad .tick::after{content:"✕"}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{50%{transform:scale(1.07)}}
+#ov-x{margin-top:22px}
+@media(max-width:520px){.res{grid-template-columns:1fr}.res img{width:100%;aspect-ratio:16/10}}
+@media(prefers-reduced-motion:reduce){.sun,.logo,.bar i,.res{animation:none!important}.ring{animation-duration:2.4s!important}}
+</style>
+</head>
+<body>
+<div class="sky"></div><div class="sun"></div>
+<div class="toast" id="toast" role="status"></div>
+
+<div class="ov" id="ov" role="alertdialog" aria-live="polite">
+  <div class="orb busy" id="orb"><div class="glow"></div><div class="ring"></div><div class="lion">🦁</div><div class="tick"></div></div>
+  <h3 id="ov-t">Fetching…</h3>
+  <p id="ov-s"></p>
+  <button class="ghost" id="ov-x">Hide</button>
+</div>
+
+<main>
+<header>
+  <div class="logo">🦁</div>
+  <h1>MD TikTok <span>Downloader</span></h1>
+  <p class="sub">Video, audio and covers. No watermark. Free, no sign-up.</p>
+</header>
+
+<section class="view on" id="v-home">
+  <div class="box">
+    <textarea id="url" rows="3" placeholder="Paste one or more TikTok links, one per line" aria-label="TikTok links"></textarea>
+    <div class="row" style="margin-top:10px">
+      <button class="ghost" id="paste">Paste</button>
+      <button class="ghost" id="clear">Clear</button>
+      <button class="btn" id="go" style="flex:1">Get download links</button>
+    </div>
+    <div class="bar" id="bar"><i></i></div>
+    <div class="hint"><span class="pill">Tip: TikTok → Share → MD TikTok</span><span class="pill">Batch supported</span></div>
+  </div>
+  <p class="status" id="status"></p>
+  <div id="results"></div>
+</section>
+
+<section class="view" id="v-hist">
+  <h2>History</h2>
+  <div id="histList"></div>
+  <button class="ghost" id="clrHist" style="width:100%">Clear history</button>
+</section>
+
+<section class="view" id="v-set">
+  <h2>Settings</h2>
+  <div class="box">
+    <div class="set"><div>When a link is shared in<small>Auto-download from TikTok's Share menu</small></div>
+      <select id="s-share"><option value="video">Download video</option><option value="audio">Download audio (MP3)</option><option value="none">Just show options</option></select></div>
+    <div class="set"><div>Return to TikTok when done<small>Closes this app after a shared download</small></div><input type="checkbox" class="sw" id="s-back"></div>
+    <div class="set"><div>Default quality<small>Used by auto and quick downloads</small></div>
+      <select id="s-q"><option value="hd">HD (best)</option><option value="sd">Standard</option></select></div>
+    <div class="set"><div>File name<small>Tokens: {author} {id} {title}</small></div>
+      <input type="text" id="s-name" value="{author}_{id}"></div>
+    <div class="set"><div>Auto-paste on open<small>Reads your clipboard if it has a TikTok link</small></div><input type="checkbox" class="sw" id="s-paste"></div>
+    <div class="set"><div>Auto-fetch after paste<small>Starts as soon as a link is pasted</small></div><input type="checkbox" class="sw" id="s-auto"></div>
+    <div class="set"><div>Save history<small>Stored only on this device</small></div><input type="checkbox" class="sw" id="s-hist" checked></div>
+    <div class="set"><div>Deep blue background<small>Off = pure AMOLED black</small></div><input type="checkbox" class="sw" id="s-theme"></div>
+    <div class="set"><div>Region hint<small>Helps with region-locked videos</small></div>
+      <select id="s-reg"><option value="">Auto</option><option>US</option><option>GB</option><option>DE</option><option>FR</option><option>EG</option><option>SA</option><option>BR</option><option>IN</option></select></div>
+  </div>
+  <p class="sub" style="font-size:13px;margin-top:12px;text-align:center">Files are saved to Movies / Music / Pictures → "MD TikTok".</p>
+</section>
+
+<section class="view" id="v-about">
+  <div class="box about">
+    <div class="logo">🦁</div>
+    <h2>MD TikTok Downloader</h2>
+    <p>Made with 💙 by Mohamed Elba</p>
+    <p class="sub" style="font-size:14px">Download only content you have the right to save.</p>
+  </div>
+</section>
+</main>
+
+<nav aria-label="Main">
+  <button class="on" data-v="home"><svg viewBox="0 0 24 24"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 20h16"/></svg>Download</button>
+  <button data-v="hist"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>History</button>
+  <button data-v="set"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg>Settings</button>
+  <button data-v="about"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.01"/></svg>About</button>
+</nav>
+
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const API='https://www.tikwm.com';
+const NATIVE=typeof Android!=='undefined';
+const def={q:'hd',name:'{author}_{id}',paste:false,auto:false,hist:true,light:false,reg:'',share:'video',back:true};
+let cfg=Object.assign({},def),hist=[];
+try{cfg=Object.assign(cfg,JSON.parse(localStorage.getItem('mdtt-cfg')||'{}'));hist=JSON.parse(localStorage.getItem('mdtt-hist')||'[]')}catch(e){}
+const save=()=>{try{localStorage.setItem('mdtt-cfg',JSON.stringify(cfg));localStorage.setItem('mdtt-hist',JSON.stringify(hist))}catch(e){}};
+const toast=m=>{const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('show'),2600)};
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const abs=u=>!u?'':u.startsWith('http')?u:API+(u.startsWith('/')?'':'/')+u;
+const fmt=n=>n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?(n/1e3).toFixed(1)+'K':n;
+const MIME={mp4:'video/mp4',mp3:'audio/mpeg',jpg:'image/jpeg'};
+
+/* ---------- native bridge ---------- */
+const cbs={};let cid=0;
+window.__native=(id,kind,data)=>{const f=cbs[id];if(f)f(kind,data)};
+const nativeCall=(fn,onProg)=>new Promise((res,rej)=>{
+  const id='c'+(++cid);
+  cbs[id]=(k,d)=>{
+    if(k==='progress'){onProg&&onProg(+d);return}
+    delete cbs[id];
+    k==='err'?rej(new Error(d)):res(d);
+  };
+  try{fn(id)}catch(e){delete cbs[id];rej(e)}
+});
+const readClip=()=>NATIVE?nativeCall(id=>Android.paste(id)):navigator.clipboard.readText();
+const writeClip=t=>NATIVE?Android.copy(t):navigator.clipboard?.writeText(t);
+
+/* ---------- settings UI ---------- */
+function applyCfg(){
+  document.documentElement.dataset.theme=cfg.light?'blue':'dark';
+  $('#s-q').value=cfg.q;$('#s-name').value=cfg.name;$('#s-paste').checked=cfg.paste;$('#s-auto').checked=cfg.auto;
+  $('#s-hist').checked=cfg.hist;$('#s-theme').checked=cfg.light;$('#s-reg').value=cfg.reg;
+  $('#s-share').value=cfg.share;$('#s-back').checked=cfg.back;
+}
+[['s-q','q'],['s-name','name'],['s-paste','paste'],['s-auto','auto'],['s-hist','hist'],['s-theme','light'],['s-reg','reg'],['s-share','share'],['s-back','back']].forEach(([id,k])=>{
+  $('#'+id).addEventListener('change',e=>{cfg[k]=e.target.type==='checkbox'?e.target.checked:e.target.value;save();applyCfg()});
+});
+
+/* ---------- navigation ---------- */
+function show(v){
+  $$('.view').forEach(x=>x.classList.toggle('on',x.id==='v-'+v));
+  $$('nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
+  if(v==='hist')renderHist();
+  scrollTo({top:0});
+  try{history.replaceState(null,'','#'+v)}catch(e){}
+}
+$$('nav button').forEach(b=>b.onclick=()=>show(b.dataset.v));
+
+/* ---------- lion overlay ---------- */
+let ovHidden=false;
+function ovSet(state,title,sub,pct){
+  if(ovHidden)return;
+  $('#ov').classList.add('on');
+  const o=$('#orb');o.className='orb '+state;o.style.setProperty('--p',pct??0);
+  $('#ov-t').textContent=title;$('#ov-s').textContent=sub||'';
+}
+function ovClose(){$('#ov').classList.remove('on')}
+$('#ov-x').onclick=()=>{ovHidden=true;ovClose()};
+
+/* ---------- API lookup ---------- */
+async function lookup(link){
+  let err='Could not reach the server';
+  for(let i=0;i<3;i++){
+    try{
+      let j;
+      if(NATIVE){
+        j=JSON.parse(await nativeCall(id=>Android.lookup(id,link,cfg.reg||'')));
+      }else{
+        const body=new URLSearchParams({url:link,hd:1});
+        if(cfg.reg)body.set('region',cfg.reg);
+        j=await (await fetch(`${API}/api/`,{method:'POST',body})).json();
+      }
+      if(j.code===0&&j.data)return j.data;
+      err=j.msg||err;
+      if(/limit/i.test(err)){await sleep(1300);continue}
+      break;
+    }catch(e){err=e.message||err;await sleep(600)}
+  }
+  throw new Error(err);
+}
+const fname=(d,ext)=>(cfg.name||'{author}_{id}').replace('{author}',d.author?.unique_id||'tiktok').replace('{id}',d.id).replace('{title}',(d.title||'').slice(0,40))
+  .replace(/[^\w\-. ]+/g,'').trim().replace(/\s+/g,'_')+'.'+ext;
+
+/* ---------- download (native streaming on Android, blob in browser) ---------- */
+async function download(url,name,btn,onProg){
+  const ext=name.split('.').pop(),old=btn?.textContent;
+  if(NATIVE){
+    try{
+      const where=await nativeCall(id=>Android.download(id,url,name,MIME[ext]||'application/octet-stream'),p=>{
+        if(btn)btn.textContent=p>=0?p+'%':'Downloading…';
+        onProg&&onProg(p);
+      });
+      toast('Saved to '+where);
+      return where;
+    }catch(e){toast('Download failed: '+e.message);return null}
+    finally{if(btn)btn.textContent=old}
+  }
+  if(btn)btn.textContent='Downloading…';
+  try{
+    const r=await fetch(url);if(!r.ok)throw 0;
+    const b=await r.blob(),a=document.createElement('a');
+    a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(a.href),5000);toast('Saved '+name);
+  }catch(e){
+    const a=document.createElement('a');a.href=url;a.download=name;a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();a.remove();
+    toast('Opened the file. If it plays, long-press or right-click to save.');
+  }
+  if(btn)btn.textContent=old;
+  return 'Downloads';
+}
+
+/* ---------- result card ---------- */
+function card(d){
+  const el=document.createElement('div');el.className='box res';
+  const hd=abs(d.hdplay),sd=abs(d.play),au=abs(d.music),cv=abs(d.origin_cover||d.cover);
+  const first=cfg.q==='hd'&&hd?'hd':'sd';
+  el.innerHTML=`<img src="${esc(abs(d.cover))}" alt="Video cover">
+  <div><h3>${esc(d.title||'Untitled video')}</h3>
+  <div class="by"><img src="${esc(abs(d.author?.avatar))}" alt=""><span>@${esc(d.author?.unique_id)}</span></div>
+  <div class="stats"><span class="pill">▶ ${fmt(d.play_count||0)}</span><span class="pill">♥ ${fmt(d.digg_count||0)}</span><span class="pill">${d.duration||0}s</span>${hd&&d.hd_size?`<span class="pill">HD ${(d.hd_size/1048576).toFixed(1)} MB</span>`:''}</div>
+  <div class="dl">
+   <button class="btn" data-k="${first}">Quick ${first==='hd'?'HD':'SD'} video</button>
+   <button class="btn teal" data-k="au">Audio MP3</button>
+   ${hd?'<button class="btn alt" data-k="hd">HD video</button>':''}
+   <button class="btn alt" data-k="sd">Standard video</button>
+   <button class="btn alt" data-k="cv">Cover image</button>
+   <button class="btn alt" data-k="cp">Copy link</button>
+  </div></div>`;
+  const map={hd:[hd,'mp4'],sd:[sd,'mp4'],au:[au,'mp3'],cv:[cv,'jpg']};
+  el.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{
+    const k=b.dataset.k;
+    if(k==='cp'){writeClip(sd||hd);toast('Direct link copied');return}
+    const [u,ext]=map[k];if(!u)return toast('Not available for this video');
+    download(u,fname(d,ext),b);
+  });
+  return el;
+}
+
+/* look up one link, render its card and store it in history */
+async function fetchOne(l){
+  const d=await lookup(l);
+  $('#results').appendChild(card(d));
+  if(cfg.hist){hist=hist.filter(h=>h.id!==d.id);hist.unshift({id:d.id,title:d.title,author:d.author?.unique_id,cover:abs(d.cover),url:l,hd:abs(d.hdplay),sd:abs(d.play),au:abs(d.music),t:Date.now()});hist=hist.slice(0,60);save()}
+  return d;
+}
+const extractLinks=t=>[...new Set(((t||'').match(/https?:\/\/[^\s]+/g)||[]).map(l=>l.replace(/[)\]}>.,;!?'"]+$/,'')).filter(l=>/tiktok\.com|douyin/i.test(l)))];
+
+/* ---------- manual run ---------- */
+async function run(){
+  const links=extractLinks($('#url').value);
+  const st=$('#status'),res=$('#results'),go=$('#go');
+  st.className='status';
+  if(!links.length){st.textContent='Paste a TikTok link first.';st.classList.add('err');return}
+  go.disabled=true;$('#bar').style.display='block';res.innerHTML='';
+  let ok=0;
+  for(const [i,l] of links.entries()){
+    st.textContent=`Fetching ${i+1} of ${links.length}…`;
+    try{await fetchOne(l);ok++}
+    catch(e){const n=document.createElement('p');n.className='status err';n.textContent=`${l.slice(0,50)}: ${e.message}`;res.appendChild(n)}
+  }
+  st.textContent=ok?`Ready: ${ok} video${ok>1?'s':''}`:'Nothing found. Check the link and try again.';
+  if(!ok)st.classList.add('err');
+  go.disabled=false;$('#bar').style.display='none';
+}
+$('#go').onclick=run;
+$('#clear').onclick=()=>{$('#url').value='';$('#results').innerHTML='';$('#status').textContent=''};
+$('#paste').onclick=async()=>{
+  try{$('#url').value=await readClip();toast('Pasted');if(cfg.auto)run()}
+  catch(e){toast('Clipboard blocked. Paste manually.')}
+};
+$('#url').addEventListener('paste',()=>{if(cfg.auto)setTimeout(run,60)});
+$('#url').addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.ctrlKey||e.metaKey))run()});
+
+/* ---------- shared from TikTok: fetch + auto-download with lion animation ---------- */
+async function autoShare(links){
+  ovHidden=false;
+  const res=$('#results');res.innerHTML='';$('#status').textContent='';
+  const audio=cfg.share==='audio';
+  let saved=0,where='';
+  for(const [i,l] of links.entries()){
+    const tag=links.length>1?` (${i+1}/${links.length})`:'';
+    try{
+      ovSet('busy','Fetching video'+tag,'Talking to the server…');
+      const d=await fetchOne(l);
+      const u=audio?abs(d.music):(cfg.q==='hd'&&d.hdplay?abs(d.hdplay):abs(d.play));
+      if(!u)throw new Error('No download link for this video');
+      const title=d.title||'';
+      ovSet('det','Downloading'+tag,title,0);
+      const w=await download(u,fname(d,audio?'mp3':'mp4'),null,
+        p=>ovSet(p>=0?'det':'busy','Downloading'+tag,p>=0?p+'% · '+title:title,Math.max(p,0)));
+      if(!w)throw new Error('Download failed');
+      saved++;where=w;
+    }catch(e){
+      ovSet('bad','Something went wrong',e.message);
+      const n=document.createElement('p');n.className='status err';n.textContent=`${l.slice(0,50)}: ${e.message}`;res.appendChild(n);
+      await sleep(2600);
+    }
+  }
+  if(saved){
+    ovSet('ok',saved>1?`Saved ${saved} files`:'Saved!','Find it in '+where);
+    await sleep(1500);
+  }
+  ovClose();
+  if(saved&&cfg.back&&NATIVE&&!ovHidden)Android.finish();
+}
+
+async function handleShared(text){
+  const links=extractLinks(text);
+  show('home');
+  if(!links.length){
+    if(text)$('#url').value=text;
+    toast('No TikTok link found in what was shared');return;
+  }
+  $('#url').value=links.join('\n');
+  if(cfg.share==='none')return run();
+  await autoShare(links);
+}
+window.onShared=t=>{if(t)handleShared(t)};
+
+/* back button support (called from Kotlin) */
+window.__back=()=>{
+  if($('#ov').classList.contains('on')){ovHidden=true;ovClose();return 1}
+  const h=location.hash.slice(1);
+  if(h&&h!=='home'){show('home');return 1}
+  return 0;
+};
+
+/* ---------- history ---------- */
+function renderHist(){
+  const box=$('#histList');
+  if(!hist.length){box.innerHTML='<div class="empty">🦁<br>No downloads yet. Your recent videos will appear here.</div>';return}
+  box.innerHTML='';
+  hist.forEach(h=>{
+    const el=document.createElement('div');el.className='box hist';
+    el.innerHTML=`<img src="${esc(h.cover)}" alt=""><div><b>${esc(h.title||'Untitled video')}</b><small>@${esc(h.author)} · ${new Date(h.t).toLocaleDateString()}</small></div>
+    <button class="ghost" data-a="v">Video</button><button class="ghost" data-a="a">MP3</button><button class="ghost" data-a="d" aria-label="Remove">✕</button>`;
+    el.querySelector('[data-a=v]').onclick=e=>download(h.hd||h.sd,fname({id:h.id,author:{unique_id:h.author},title:h.title},'mp4'),e.target);
+    el.querySelector('[data-a=a]').onclick=e=>download(h.au,fname({id:h.id,author:{unique_id:h.author},title:h.title},'mp3'),e.target);
+    el.querySelector('[data-a=d]').onclick=()=>{hist=hist.filter(x=>x.id!==h.id);save();renderHist()};
+    box.appendChild(el);
+  });
+}
+$('#clrHist').onclick=()=>{hist=[];save();renderHist();toast('History cleared')};
+
+/* ---------- init ---------- */
+applyCfg();
+const shared=NATIVE?Android.takeShared():'';
+if(shared){
+  handleShared(shared);
+}else{
+  const h=location.hash.slice(1);if(['hist','set','about'].includes(h))show(h);
+  if(cfg.paste)readClip().then(t=>{if(/tiktok\.com/i.test(t)){$('#url').value=t;if(cfg.auto)run()}}).catch(()=>{});
+}
+</script>
+</body>
+</html>
